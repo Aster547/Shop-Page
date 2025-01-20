@@ -1,0 +1,12 @@
+extends ../layouts/main-layout.pug
+
+block content
+
+    main.centered
+        h1.product__title #{product.title}
+        hr
+        img(src=product.imageURL alt=product.title)
+        h2.product__price $#{product.price}
+        p.product__description #{product.description}
+        include ../includes/add-to-cart.pug
+
