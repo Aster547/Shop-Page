@@ -1,11 +1,32 @@
 const fs = require('fs');
-const helpFunction = require('./util/helper-functions');
-const data_path = require('./util/data-paths');
+const path = require('path');
 
-const p = data_path.products;
+const Cart = require('./cart');
+
+const p = path.join(
+    path.dirname(require.main.filename), 
+    'data', 
+    'products.json'
+);
+
+
+getProductsFromFile = cb => {
+    fs.readFile(p, (err, fileContent) => {
+        if (err){
+            cb([]);
+        }
+
+        else {
+            cb(JSON.parse(fileContent));
+        }
+            
+        
+    });
+}
 
 module.exports = class Product{
-    constructor(title, imageURL, description, price){
+    constructor(id, title, imageURL, description, price){
+        this.id = id;
         this.title = title;
         this.imageURL = imageURL;
         this.description = description;
@@ -14,22 +35,53 @@ module.exports = class Product{
 
     //This updates the list of products
     save(){
-        this.id = Math.random().toString();
-        helpFunction.getProductsFromFile( products => {
-            products.push(this);
+        getProductsFromFile( products => {
 
-            fs.writeFile(p, JSON.stringify(products), (err) => {
-                if (err)
-                    console.log("File not saved >:(");
-                else    
-                    console.log("Save success :3");
+            if (this.id){
+                const existingProductIndex = products.findIndex(prod => prod.id === this.id);
+                let updatedProducts = [...products];
+                updatedProducts[existingProductIndex] = this;
+
+                fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
+                    if (err)
+                        console.log("File not saved >:(");
+                    else    
+                        console.log("Save success :3");                    
+                });                
+            }
+            else {
+                this.id = Math.random().toString();
+                
+                products.push(this);
+
+                fs.writeFile(p, JSON.stringify(products), (err) => {
+                    if (err)
+                        console.log("File not saved >:(");
+                    else    
+                        console.log("Save success :3");
+                });
+
+            }
+        });
+    }
+
+    static deleteById(prodID) {
+        getProductsFromFile((products) => {
+            const product = products.find((prod) => prod.id === prodID);
+            const updatedProducts = products.filter(prod => prod.id !== prodID);
+
+            fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
+                if (!err) {
+
+                    Cart.deleteProduct(prodID, product.price);
+                }
             });
         });
     }
 
     static findById(prodID, cb){
 
-        helpFunction.getProductsFromFile((products) => {
+        getProductsFromFile((products) => {
             const product = products.find(product => product.id === prodID);
             cb(product);
         });
@@ -37,6 +89,6 @@ module.exports = class Product{
 
     //This fetches all products and places it in the array of the callback function
     static fetchAll(cb){
-        helpFunction.getProductsFromFile(cb);
+        getProductsFromFile(cb);
     }
 }

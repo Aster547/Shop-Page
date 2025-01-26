@@ -1,0 +1,26 @@
+extends ../layouts/main-layout 
+
+block styles
+    link(rel="stylesheet", href="/css/forms.css")
+    link(rel="stylesheet", href="/css/product.css")
+
+block content
+    main
+        form.product-form(action=(editing? "/admin/edit-product/"+product.id :"/admin/add-product") method="POST")
+            div.form-control
+                label.title Title
+                input(type="text" name="title" id="title" value=(editing? product.title : ''))
+            div.form-control
+                label.title Image URL
+                input(type="text" name="imageURL" id="imageURL" value=(editing? product.imageURL : ''))
+            div.form-control
+                label.title Price
+                input(type="number" step="0.01" name="price" id="price" value=(editing? product.price : ''))
+            div.form-control
+                label.title Description
+                textarea(type="text" name="description" id="description")= editing ? product.description : ''
+            button.btn(type="submit") 
+                if editing 
+                    | Update Product 
+                else 
+                    | Add Product
